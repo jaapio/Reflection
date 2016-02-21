@@ -12,12 +12,14 @@
 
 namespace phpDocumentor\Reflection\Php;
 
+use phpDocumentor\Reflection\File as SourceFile;
 use phpDocumentor\Reflection\DocBlockFactory;
 use phpDocumentor\Reflection\Exception;
 use phpDocumentor\Reflection\Fqsen;
 use phpDocumentor\Reflection\PrettyPrinter;
 use phpDocumentor\Reflection\ProjectFactory as ProjectFactoryInterface;
 use phpDocumentor\Reflection\Php\Factory as Factory;
+use Webmozart\Assert\Assert;
 
 /**
  * Factory class to transform files into a project description.
@@ -66,7 +68,7 @@ final class ProjectFactory implements ProjectFactoryInterface
      * Creates a project from the set of files.
      *
      * @param string $name
-     * @param string[] $files
+     * @param SourceFile[] $files
      * @return Project
      * @throws Exception when no matching strategy was found.
      */
@@ -74,9 +76,11 @@ final class ProjectFactory implements ProjectFactoryInterface
     {
         $project = new Project($name);
 
-        foreach ($files as $filePath) {
-            $strategy = $this->strategies->findMatching($filePath);
-            $project->addFile($strategy->create($filePath, $this->strategies));
+        Assert::allIsInstanceOf($files, SourceFile::class);
+
+        foreach ($files as $file) {
+            $strategy = $this->strategies->findMatching($file);
+            $project->addFile($strategy->create($file, $this->strategies));
         }
 
         $this->buildNamespaces($project);
