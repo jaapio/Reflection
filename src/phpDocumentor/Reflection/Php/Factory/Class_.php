@@ -14,10 +14,14 @@
 namespace phpDocumentor\Reflection\Php\Factory;
 
 use InvalidArgumentException;
+use phpDocumentor\Reflection\DocBlockFactory;
 use phpDocumentor\Reflection\Element;
 use phpDocumentor\Reflection\Fqsen;
+use phpDocumentor\Reflection\Interpret;
+use phpDocumentor\Reflection\Interpreter;
 use phpDocumentor\Reflection\Php\Class_ as ClassElement;
 use phpDocumentor\Reflection\Php\ProjectFactoryStrategy;
+use phpDocumentor\Reflection\Php\Reducer\DocBlock;
 use phpDocumentor\Reflection\Php\StrategyContainer;
 use phpDocumentor\Reflection\Types\Context;
 use PhpParser\Node;
@@ -58,15 +62,15 @@ final class Class_ extends AbstractFactory implements ProjectFactoryStrategy
      */
     protected function doCreate($object, StrategyContainer $strategies, Context $context = null)
     {
-        $docBlock = $this->createDocBlock($strategies, $object->getDocComment(), $context);
+        $command = new Interpret($object, $context);
 
-        $classElement = new ClassElement(
-            $object->fqsen,
-            $docBlock,
-            $object->extends ? new Fqsen('\\' . $object->extends) : null,
-            $object->isAbstract(),
-            $object->isFinal()
+        $interpreter = new Interpreter(
+            [
+                new \phpDocumentor\Reflection\Php\Reducer\Class_(),
+                new DocBlock(DocBlockFactory::createInstance())
+            ]
         );
+        $classElement = $interpreter->interpret($command);
 
         if (isset($object->implements)) {
             foreach ($object->implements as $interfaceClassName) {

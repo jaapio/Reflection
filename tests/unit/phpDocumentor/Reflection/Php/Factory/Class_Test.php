@@ -21,6 +21,7 @@ use phpDocumentor\Reflection\Php\Constant as ConstantElement;
 use phpDocumentor\Reflection\Php\Method as MethodElement;
 use phpDocumentor\Reflection\Php\Property as PropertyElement;
 use phpDocumentor\Reflection\Php\StrategyContainer;
+use phpDocumentor\Reflection\Types\Context;
 use PhpParser\Comment\Doc;
 use PhpParser\Node\Const_;
 use PhpParser\Node\Expr\Variable;
@@ -238,21 +239,18 @@ class Class_Test extends TestCase
     public function testCreateWithDocBlock()
     {
         $doc = m::mock(Doc::class);
+        $doc->shouldReceive('getText')->andReturn('Summary');
         $classMock = $this->buildClassMock();
         $classMock->shouldReceive('getDocComment')->andReturn($doc);
 
-        $docBlock = new DocBlockElement('');
+        $docBlock = new DocBlockElement('Summary', null, [], new Context('\\'));
 
         $containerMock = m::mock(StrategyContainer::class);
-        $containerMock->shouldReceive('findMatching->create')
-            ->once()
-            ->with($doc, $containerMock, null)
-            ->andReturn($docBlock);
 
         /** @var ClassElement $class */
         $class = $this->fixture->create($classMock, $containerMock);
 
-        $this->assertSame($docBlock, $class->getDocBlock());
+        $this->assertEquals($docBlock, $class->getDocBlock());
     }
 
     /**
